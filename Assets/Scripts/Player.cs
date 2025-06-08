@@ -28,7 +28,7 @@ public class Player : MonoBehaviour
     {
         rb = GetComponent<Rigidbody2D>();
         sR = GetComponent<SpriteRenderer>();
-        rb.bodyType = RigidbodyType2D.Kinematic;
+        rb.bodyType = RigidbodyType2D.Dynamic;
 
         score = 0f;
     }
