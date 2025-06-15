@@ -100,7 +100,7 @@ public class MapGeneratorIssac : MonoBehaviour
         InitPlayer();
         InitMapInvisible();
 
-
+        DungeonManager.GetInstance().LoadVisitedRoomsFromJSON();  // ¹Ì´Ï¸Ê¹à¾ÆÁö´Â°Å
     }
 
     void InitMap()
@@ -550,7 +550,7 @@ public class MapGeneratorIssac : MonoBehaviour
                 return (true, posList);
             }
         }
-        Debug.Log( "00000" );
+        //Debug.Log( "00000" );
         return (false, posList);
     }
 

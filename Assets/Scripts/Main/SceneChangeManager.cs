@@ -47,6 +47,8 @@ public class SceneChangeManager : MonoBehaviour
             yield return null;
         }
 
+        GameTestManager.GetInstance().clearCount = 0;
+
         SceneManager.LoadScene(sceneName);
     }
 }
