@@ -182,15 +182,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c897372db837f7940a503511e8d7c4e8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enemyCount: 0
-  playerRoomID: 0
-  difficulty: 0
+  playerRoomID: 1
   cellSize: 0
   tileNumPerCell: 0
   player: {fileID: 121686734}
   mainCamera: {fileID: 1789870548}
   minimapCamera: {fileID: 2050460084}
   tilemap: {fileID: 619742851}
+  cameraMoveSpeed: 40
 --- !u!4 &117505205
 Transform:
   m_ObjectHideFlags: 0
@@ -797,7 +796,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &459526476
 RectTransform:
   m_ObjectHideFlags: 0

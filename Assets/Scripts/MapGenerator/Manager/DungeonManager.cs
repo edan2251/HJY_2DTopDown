@@ -1,3 +1,4 @@
+
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -22,9 +23,9 @@ public class DungeonManager : MonoBehaviour
 
     private static DungeonManager instance;
 
-    public int enemyCount;
-    public int playerRoomID;
-    public int difficulty;
+    //public int enemyCount;
+    public int playerRoomID = 1;    // 플레이어 방도 1로 초기화
+    //public int difficulty;
     public int cellSize;
     public int tileNumPerCell;
     public Player player;
@@ -37,6 +38,14 @@ public class DungeonManager : MonoBehaviour
     public Dictionary<int, HashSet<Cell>> sameRoomDic;  // id, 해당 id의 cell들
     public Dictionary<int, HashSet<Cell>> adjacentCellDic;  // id, 해당 id와 인접한 cell들
     public HashSet<int> isRoomVisited;
+
+    private Vector3 targetCameraPos;    // 카메라가 이동할 목표 위치
+    private bool isCameraMoving = false;  // 카메라가 이동 중인지 상태 체크
+    public float cameraMoveSpeed = 7f;   // 카메라 이동 속도 조절용
+
+    private int previousRoomID = -1;  // 초기값 -1
+
+    private Coroutine fadeOutCoroutine;
 
     [System.Serializable]
     public class DungeonVisitData
@@ -128,6 +137,23 @@ public class DungeonManager : MonoBehaviour
         }
     }
 
+    //카메라 부드럽게 따라가기
+    public void SetMainCameraPosSmooth()
+    {
+        if (!sameRoomDic.ContainsKey(playerRoomID))
+            return;
+
+        Vector3 pos = Vector3.zero;
+        foreach (Cell cell in sameRoomDic[playerRoomID])
+        {
+            pos += cell.transform.position;
+        }
+        pos /= sameRoomDic[playerRoomID].Count;
+
+        targetCameraPos = new Vector3(pos.x, pos.y, -10);
+        isCameraMoving = true;
+    }
+
     private void Awake()
     {
         if (instance == null)
@@ -144,6 +170,56 @@ public class DungeonManager : MonoBehaviour
         doorDic = new Dictionary<int, List<Door>>();
         adjacentCellDic = new Dictionary<int, HashSet<Cell>>();
         isRoomVisited = new HashSet<int>();
+    }
+
+    public void SetCameraToMapCenter()
+    {
+        int targetRoomID = 1;  // 1번 방으로 고정
+        if (!sameRoomDic.ContainsKey(targetRoomID))
+        {
+            Debug.LogWarning("sameRoomDic에 1번 방이 없습니다.");
+            return;
+        }
+
+        Vector3 totalPos = Vector3.zero;
+        var cellListInRoom = sameRoomDic[targetRoomID];
+
+        foreach (var cell in cellListInRoom)
+        {
+            totalPos += cell.transform.position;
+        }
+
+        Vector3 center = totalPos / cellListInRoom.Count;
+
+        mainCamera.transform.position = new Vector3(center.x, center.y, -10);
+        minimapCamera.transform.position = new Vector3(center.x, center.y, -10);
+    }
+
+
+    private Vector3 velocity = Vector3.zero; // 카메라 이동 속도 저장용
+
+    private void Update()
+    {
+        if (isCameraMoving)
+        {
+            // SmoothDamp를 사용한 부드러운 카메라 이동
+            mainCamera.transform.position = Vector3.SmoothDamp(
+                mainCamera.transform.position,
+                targetCameraPos,
+                ref velocity,
+                0.3f // 감속 시간 (작을수록 빠르게 붙음, 0.2~0.5 추천)
+            );
+
+            minimapCamera.transform.position = mainCamera.transform.position;
+
+            // 목표 위치에 충분히 가까우면 이동 종료
+            if (Vector3.Distance(mainCamera.transform.position, targetCameraPos) < 0.05f)
+            {
+                mainCamera.transform.position = targetCameraPos; // 정확히 맞춰 붙여줌
+                isCameraMoving = false;
+                velocity = Vector3.zero; // 속도 초기화
+            }
+        }
     }
 
     public static DungeonManager GetInstance()
@@ -163,12 +239,28 @@ public class DungeonManager : MonoBehaviour
         }
     }
 
-    public void SetPlayerRoomID(int id)
+    public void SetPlayerRoomID(int newRoomID)
     {
-        playerRoomID = id;
+        if (playerRoomID != newRoomID)
+        {
+            previousRoomID = playerRoomID;
+            playerRoomID = newRoomID;
 
-        // 방문 기록에 현재 방 추가
-        isRoomVisited.Add(id);
+            isRoomVisited.Add(newRoomID);
+
+            // 현재 방과 이전 방만 보이게, 나머지는 숨기기
+            foreach (var id in tilemapDic.Keys)
+            {
+                if (id == playerRoomID || id == previousRoomID)
+                    SetVisibilityTiles(id, true);
+                else
+                    SetVisibilityTiles(id, false);
+            }
+            if (previousRoomID != -1)
+            {
+                FadeOutRoom(previousRoomID);
+            }  // 페이드아웃
+        }
 
         // 방문 정보 저장
         SaveVisitedRoomsToJSON();
@@ -177,23 +269,6 @@ public class DungeonManager : MonoBehaviour
     public void SetPlayerPos(Vector3Int pos)
     {
         player.transform.position = tilemap.CellToWorld(pos);
-    }
-
-    public void SetMainCameraPos()
-    {
-        Vector3 pos = new Vector3(0, 0, 0);
-
-        if (!sameRoomDic.ContainsKey(playerRoomID))
-            return;
-
-        foreach (Cell cell in sameRoomDic[playerRoomID])
-        {
-            pos += cell.transform.position;
-        }
-
-        pos /= sameRoomDic[playerRoomID].Count;
-        mainCamera.transform.position = new Vector3(pos.x, pos.y, -10);
-        minimapCamera.transform.position = new Vector3(pos.x, pos.y, -10);
     }
 
     public void SetPlayerTransform(Vector2 pos, float size)
@@ -237,27 +312,16 @@ public class DungeonManager : MonoBehaviour
                 Vector3Int pos = tileInfo.pos;
 
                 Color color = tilemapType.GetColor(pos);
-                if (isVisible)
-                {
-                    color.a = 1;
-                }
-                else
-                {
-                    color.a = 0;
-                }
+                color.a = isVisible ? 1f : 0f;
                 tilemapType.SetColor(pos, color);
             }
 
-            foreach (Door door in doorDic[id])
+            if (doorDic.ContainsKey(id))
             {
-                door.SetVisibility(isVisible);
-                if (isVisible)
+                foreach (Door door in doorDic[id])
                 {
-                    door.GetComponent<BoxCollider2D>().isTrigger = true;
-                }
-                else
-                {
-                    door.GetComponent<BoxCollider2D>().isTrigger = false;
+                    door.SetVisibility(isVisible);
+                    door.GetComponent<BoxCollider2D>().isTrigger = isVisible;
                 }
             }
         }
@@ -324,4 +388,62 @@ public class DungeonManager : MonoBehaviour
             adjacentCellDic.Add(postCell.id, new HashSet<Cell>() { prevCell });
         }
     }
+
+    public void FadeOutRoom(int roomID, float duration = 0.8f) //페이드아웃 속도 조절 줄일수록 빠름
+    {
+        if (fadeOutCoroutine != null)
+            StopCoroutine(fadeOutCoroutine);
+
+        fadeOutCoroutine = StartCoroutine(FadeOutTiles(roomID, duration));
+    }
+
+    private IEnumerator FadeOutTiles(int roomID, float duration)
+    {
+        if (doorDic.ContainsKey(roomID))
+        {
+            foreach (var door in doorDic[roomID])
+            {
+                door.SetVisibility(false);
+                door.GetComponent<BoxCollider2D>().isTrigger = false;
+            }
+        }
+
+        if (!tilemapDic.ContainsKey(roomID))
+            yield break;
+
+        float time = 0f;
+        Dictionary<FTileInfoByCellID, Color> initialColors = new Dictionary<FTileInfoByCellID, Color>();
+
+        // 초기 색상 저장
+        foreach (var tileInfo in tilemapDic[roomID])
+        {
+            Color original = tileInfo.tilemap.GetColor(tileInfo.pos);
+            initialColors[tileInfo] = original;
+        }
+
+        while (time < duration)
+        {
+            float alpha = Mathf.Lerp(1f, 0f, time / duration);
+            foreach (var tileInfo in tilemapDic[roomID])
+            {
+                Color color = initialColors[tileInfo];
+                color.a = alpha;
+                tileInfo.tilemap.SetColor(tileInfo.pos, color);
+            }
+
+            time += Time.deltaTime;
+            yield return null;
+        }
+
+        // 완전히 투명하게 설정
+        foreach (var tileInfo in tilemapDic[roomID])
+        {
+            Color color = initialColors[tileInfo];
+            color.a = 0f;
+            tileInfo.tilemap.SetColor(tileInfo.pos, color);
+        }
+
+
+    }
+
 }

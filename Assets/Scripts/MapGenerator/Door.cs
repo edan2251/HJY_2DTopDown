@@ -24,35 +24,36 @@ public class Door : CustomTileBase
         }
     }
 
-    public Door( Vector2 _posWorld ) : base( _posWorld )
+    public Door(Vector2 _posWorld) : base(_posWorld)
     {
         this.posWorld = _posWorld;
     }
 
-    private void OnTriggerEnter2D( Collider2D other )
+
+    private void OnTriggerEnter2D(Collider2D other)
     {
         Player player = other.gameObject.GetComponentInParent<Player>();
         if (player && !canCollide)
         {
             nextDoor.canCollide = true;
-            DungeonManager.GetInstance().SetPlayerPos( nextDoorPos );
-            DungeonManager.GetInstance().SetPlayerRoomID( nextDoor.ownerCell.id );
-            DungeonManager.GetInstance().SetMainCameraPos();
+            DungeonManager.GetInstance().SetPlayerPos(nextDoorPos);
+            DungeonManager.GetInstance().SetPlayerRoomID(nextDoor.ownerCell.id);
+            DungeonManager.GetInstance().SetMainCameraPosSmooth();
 
             if (!GameTestManager.GetInstance().allMapVisibleMode)
             {
-                DungeonManager.GetInstance().SetVisibilityTiles( nextDoor.ownerCell.id, true );
-                DungeonManager.GetInstance().SetVisibilityTiles( ownerCell.id, false );
+                //DungeonManager.GetInstance().SetVisibilityTiles(nextDoor.ownerCell.id, true);
+                //DungeonManager.GetInstance().SetVisibilityTiles(ownerCell.id, true);
 
-                DungeonManager.GetInstance().ActivateMinimap( nextDoor.ownerCell.id, true );
-                DungeonManager.GetInstance().ActivateMinimap( ownerCell.id, false );
+                DungeonManager.GetInstance().ActivateMinimap(nextDoor.ownerCell.id, true);
+                DungeonManager.GetInstance().ActivateMinimap(ownerCell.id, false);
             }
 
 
         }
     }
 
-    private void OnTriggerExit2D( Collider2D other )
+    private void OnTriggerExit2D(Collider2D other)
     {
         Player player = other.gameObject.GetComponentInParent<Player>();
         if (player)

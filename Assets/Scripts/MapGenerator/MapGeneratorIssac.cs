@@ -33,14 +33,8 @@ public class MapGeneratorIssac : MonoBehaviour
     [SerializeField, Tooltip("cellSize % tileNumPerCell == 0")] private int tileNumPerCell = 30;
     private Vector2Int mapSize;
     [SerializeField] private GameObject cellObj;
-    //[SerializeField] private GameObject groundObj;
-    //[SerializeField] private GameObject wallObj;
     [SerializeField] private GameObject doorObj;
-    //[SerializeField] private GameObject tileBaseObj;
     [SerializeField] private GameObject player;
-    //[SerializeField] private Sprite groundSprite;
-    //[SerializeField] private Sprite wallSprite;
-    //[SerializeField] private Sprite doorSprite;
     [SerializeField] private Sprite minimap4Walls;
     [SerializeField] private Sprite minimap3Walls;
     [SerializeField] private Sprite minimap2Walls;
@@ -97,9 +91,9 @@ public class MapGeneratorIssac : MonoBehaviour
     {
         InitMap();
         GenerateRoom( cellList[ cellList.GetLength( 1 ) / 2, cellList.GetLength( 0 ) / 2 ] );
+        DungeonManager.GetInstance().SetCameraToMapCenter(); //¸Ê Áß¾ÓÈ­
         InitPlayer();
         InitMapInvisible();
-
         DungeonManager.GetInstance().LoadVisitedRoomsFromJSON();  // ¹Ì´Ï¸Ê¹à¾ÆÁö´Â°Å
     }
 
