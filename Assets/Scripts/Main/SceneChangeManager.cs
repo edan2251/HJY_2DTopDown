@@ -47,7 +47,12 @@ public class SceneChangeManager : MonoBehaviour
             yield return null;
         }
 
-        GameTestManager.GetInstance().clearCount = 0;
+        var gameManager = GameTestManager.GetInstance();
+        if (gameManager != null)
+        {
+            gameManager.clearCount = 0; // 초기화
+        }
+        // else는 아무 처리도 안 함 (조용히 무시)
 
         SceneManager.LoadScene(sceneName);
     }
