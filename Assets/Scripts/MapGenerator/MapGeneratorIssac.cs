@@ -24,6 +24,11 @@ public enum EDir
 
 public class MapGeneratorIssac : MonoBehaviour
 {
+    [SerializeField] private GameObject switchPrefab;
+    private List<GameObject> spawnedSwitches = new List<GameObject>(); // 배치된 스위치 목록
+    private static int totalSwitchCount = 0; // 전체 스위치 수 카운트
+    private static HashSet<int> switchedRoomIDs = new HashSet<int>(); // 방마다 1개 제한
+
     bool DrawnBossCell = false;
     bool isBossCell = false;
     private float tileSizePerCell;
@@ -95,12 +100,20 @@ public class MapGeneratorIssac : MonoBehaviour
         InitPlayer();
         InitMapInvisible();
         DungeonManager.GetInstance().LoadVisitedRoomsFromJSON();  // 미니맵밝아지는거
+
+        PlaceSwitchesInMap();
+
+        //if (GameTestManager.GetInstance().clearCount == 2)
+        //{
+        //    PlaceSwitchesInMap();
+        //}
+
     }
 
     void InitMap()
     {
         int cellNum = roomDepth * 4;
-        mapSize = new Vector2Int( cellNum * cellSize, cellNum * cellSize );
+        mapSize = new Vector2Int(cellNum * cellSize, cellNum * cellSize);
         cellList = new Cell[cellNum, cellNum];
         tileSizePerCell = cellSize / tileNumPerCell;
         DungeonManager.GetInstance().tileNumPerCell = tileNumPerCell;
@@ -109,12 +122,12 @@ public class MapGeneratorIssac : MonoBehaviour
         {
             for (int j = 0; j < cellNum; j++)
             {
-                cellList[i, j] = Instantiate( cellObj ).GetComponent<Cell>();
-                cellList[i, j].InitCell( new Vector2Int( i, j ));
-                cellList[i, j].transform.localScale = new Vector3( cellSize, cellSize, 0 );
-                cellList[i, j].transform.position = new Vector3( -mapSize.x / 2 + i * cellSize + cellSize / 2, -mapSize.y / 2 + j * cellSize + cellSize / 2, 10 );
+                cellList[i, j] = Instantiate(cellObj).GetComponent<Cell>();
+                cellList[i, j].InitCell(new Vector2Int(i, j));
+                cellList[i, j].transform.localScale = new Vector3(cellSize, cellSize, 0);
+                cellList[i, j].transform.position = new Vector3(-mapSize.x / 2 + i * cellSize + cellSize / 2, -mapSize.y / 2 + j * cellSize + cellSize / 2, 10);
                 cellList[i, j].transform.parent = cellParent.transform;
-                cellList[i, j].tilemapLocalPos = new Vector3Int( -mapSize.x / 2 + tileNumPerCell * i, -mapSize.x / 2 + tileNumPerCell * j, 0 );
+                cellList[i, j].tilemapLocalPos = new Vector3Int(-mapSize.x / 2 + tileNumPerCell * i, -mapSize.x / 2 + tileNumPerCell * j, 0);
                 cellList[i, j].cellSize = cellSize;
             }
         }
@@ -134,11 +147,20 @@ public class MapGeneratorIssac : MonoBehaviour
 
     void InitPlayer()
     {
-        if (player == null) 
+        if (player == null)
             return;
 
-        Vector3Int pos = new Vector3Int( tileNumPerCell / 2, tileNumPerCell / 2, 0 );
-        DungeonManager.GetInstance().SetPlayerTransform( groundTilemap.CellToWorld(pos), groundTilemap.cellSize.x * 1f);
+        int centerX = cellList.GetLength(0) / 2;
+        int centerY = cellList.GetLength(1) / 2;
+
+        Cell centerCell = cellList[centerX, centerY];
+
+        // 타일맵 로컬 좌표에서 중앙 좌표
+        Vector3Int centerTilePos = new Vector3Int(centerCell.tilemapLocalPos.x + tileNumPerCell / 2, centerCell.tilemapLocalPos.y + tileNumPerCell / 2, 0);
+
+        Vector3 worldPos = groundTilemap.CellToWorld(centerTilePos);
+
+        DungeonManager.GetInstance().SetPlayerTransform(worldPos, groundTilemap.cellSize.x * 1f);
 
         player.GetComponent<Player>().Speed *= tileSizePerCell * 0.5f * player.transform.localScale.x;
     }
@@ -312,33 +334,82 @@ public class MapGeneratorIssac : MonoBehaviour
     void DrawTilesInCell(Cell cell)
     {
         Vector3Int curPos;
+
         for (int i = 0; i < tileNumPerCell; i++)
         {
             for (int j = 0; j < tileNumPerCell; j++)
             {
-                curPos = new Vector3Int( cell.tilemapLocalPos.x + i, cell.tilemapLocalPos.y + j, 0 );
+                curPos = new Vector3Int(cell.tilemapLocalPos.x + i, cell.tilemapLocalPos.y + j, 0);
 
+                // 보스방 여부에 따라 타일 설정
                 if (!isBossCell)
                 {
-                    groundTilemap.SetTile( curPos, groundTile );
+                    groundTilemap.SetTile(curPos, groundTile);
                 }
                 else
                 {
-                    groundTilemap.SetTile( curPos, bossGroundTile );
+                    groundTilemap.SetTile(curPos, bossGroundTile);
                 }
 
+                // 위치 등록
                 DungeonManager.GetInstance().AddToTilemapDic(roomID, groundTilemap, curPos);
+
+                // **여기서 스위치 배치 호출 삭제!!**
             }
         }
 
-        // 방의 중앙값 구하기
-        //cell.posWorld = groundTilemap.CellToWorld( new Vector3Int( cell.tilemapLocalPos.x + tileNumPerCell / 2, cell.tilemapLocalPos.y + tileNumPerCell / 2, 0 ) );
-        Vector2 pos = new Vector2 ( cell.tilemapLocalPos.x + tileNumPerCell / 2, cell.tilemapLocalPos.y + tileNumPerCell / 2 );
-        DungeonManager.GetInstance().AddToSameRoomDic( cell );
-
-        // set enemy spawn pos
-        cell.SetSpawnPosList( pos );
+        // 방 중앙 위치 설정 (적 스폰 등)
+        Vector2 pos = new Vector2(cell.tilemapLocalPos.x + tileNumPerCell / 2, cell.tilemapLocalPos.y + tileNumPerCell / 2);
+        DungeonManager.GetInstance().AddToSameRoomDic(cell);
+        cell.SetSpawnPosList(pos);
     }
+
+    void PlaceSwitchesInMap()
+    {
+        int maxSwitches = 5;
+        totalSwitchCount = 0;
+        switchedRoomIDs.Clear();
+
+        // 기존에 생성된 스위치가 있다면 삭제 (재생성 대비)
+        foreach (var sw in spawnedSwitches)
+        {
+            if (sw != null)
+                Destroy(sw);
+        }
+        spawnedSwitches.Clear();
+
+        List<Cell> candidateRooms = new List<Cell>();
+
+        // 보스방 제외, 특정 방 제외하고 스위치 생성 가능한 방 모으기
+        foreach (Cell cell in cellList)
+        {
+            if (cell.isChecked && !cell.isBossRoom && cell.id != 1 && cell.id != 16)
+            {
+                candidateRooms.Add(cell);
+            }
+        }
+
+        candidateRooms = ShuffleList(candidateRooms);
+
+        foreach (Cell room in candidateRooms)
+        {
+            if (totalSwitchCount >= maxSwitches) break;
+
+            if (!switchedRoomIDs.Contains(room.id))
+            {
+                // 스위치 생성 좌표 결정 (타일맵 중앙 같은 위치)
+                Vector3Int pos = new Vector3Int(room.tilemapLocalPos.x + tileNumPerCell / 2, room.tilemapLocalPos.y + tileNumPerCell / 2, 0);
+                Vector3 worldPos = groundTilemap.CellToWorld(pos) + new Vector3(0.5f, 0.5f, -1f);
+
+                GameObject sw = Instantiate(switchPrefab, worldPos, Quaternion.identity);
+                spawnedSwitches.Add(sw);
+
+                totalSwitchCount++;
+                switchedRoomIDs.Add(room.id);
+            }
+        }
+    }
+
 
     void DrawWall( Cell cell, EDir dir )
     {
@@ -405,8 +476,12 @@ public class MapGeneratorIssac : MonoBehaviour
         Vector3Int pos;
         Door doorInstance = Instantiate( doorObj ).GetComponent<Door>();
 
-        if (isBossCell) doorInstance.GetComponent<SpriteRenderer>().sprite = bossDoorSprite;
-        
+        if (isBossCell /*&& GameTestManager.GetInstance().clearCount == 2*/)
+        {
+            doorInstance.GetComponent<SpriteRenderer>().sprite = bossDoorSprite;
+            doorInstance.LockDoor();  // 문 잠금 상태 설정
+        }
+
         doorInstance.OwnerCell = cell;
         switch (dir)
         {
@@ -602,4 +677,7 @@ public class MapGeneratorIssac : MonoBehaviour
 
         return list;
     }
+
+
+
 }

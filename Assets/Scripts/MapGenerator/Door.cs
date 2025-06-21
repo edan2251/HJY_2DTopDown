@@ -4,24 +4,33 @@ using UnityEngine;
 [Serializable]
 public class Door : CustomTileBase
 {
-    //private bool isEnabled = true;
     private bool canCollide = false;
+    private bool isLocked = true; // 잠금 상태 변수
+
     [SerializeField] private Cell ownerCell;
     [SerializeField] private Door nextDoor;
     [SerializeField] private Vector3Int nextDoorPos;
-    [SerializeField] private Sprite dafaultDoorSprite;
-    [SerializeField] private Sprite disabledDoorSprite;
+
+    [SerializeField] private Sprite defaultDoorSprite;
+    [SerializeField] private Sprite disabledDoorSprite;  // 잠긴 문 이미지 (lockedSprite)
+    [SerializeField] private Sprite unlockedDoorSprite;  // 열린 문 이미지 (unlockedSprite)
+
     private SpriteRenderer doorSpriteRenderer;
+    private BoxCollider2D boxCollider;
 
     private void Awake()
     {
-        boxCollider2D = GetComponent<BoxCollider2D>();
+        boxCollider = GetComponent<BoxCollider2D>();
         doorSpriteRenderer = GetComponent<SpriteRenderer>();
-        if (boxCollider2D != null)
+
+        if (boxCollider != null)
         {
-            boxCollider2D.enabled = true;
-            boxCollider2D.isTrigger = true;
+            boxCollider.enabled = true;
+            boxCollider.isTrigger = true;
         }
+
+
+        UpdateDoorVisual();
     }
 
     public Door(Vector2 _posWorld) : base(_posWorld)
@@ -29,27 +38,31 @@ public class Door : CustomTileBase
         this.posWorld = _posWorld;
     }
 
-
     private void OnTriggerEnter2D(Collider2D other)
     {
         Player player = other.gameObject.GetComponentInParent<Player>();
-        if (player && !canCollide)
+
+        if (player)
         {
-            nextDoor.canCollide = true;
-            DungeonManager.GetInstance().SetPlayerPos(nextDoorPos);
-            DungeonManager.GetInstance().SetPlayerRoomID(nextDoor.ownerCell.id);
-            DungeonManager.GetInstance().SetMainCameraPosSmooth();
-
-            if (!GameTestManager.GetInstance().allMapVisibleMode)
+            if (isLocked)
             {
-                //DungeonManager.GetInstance().SetVisibilityTiles(nextDoor.ownerCell.id, true);
-                //DungeonManager.GetInstance().SetVisibilityTiles(ownerCell.id, true);
-
-                DungeonManager.GetInstance().ActivateMinimap(nextDoor.ownerCell.id, true);
-                DungeonManager.GetInstance().ActivateMinimap(ownerCell.id, false);
+                // 잠긴 문일 때는 통과 불가 (콜라이더 활성화 상태)
+                return;
             }
 
+            if (!canCollide)
+            {
+                nextDoor.canCollide = true;
+                DungeonManager.GetInstance().SetPlayerPos(nextDoorPos);
+                DungeonManager.GetInstance().SetPlayerRoomID(nextDoor.ownerCell.id);
+                DungeonManager.GetInstance().SetMainCameraPosSmooth();
 
+                if (!GameTestManager.GetInstance().allMapVisibleMode)
+                {
+                    DungeonManager.GetInstance().ActivateMinimap(nextDoor.ownerCell.id, true);
+                    DungeonManager.GetInstance().ActivateMinimap(ownerCell.id, false);
+                }
+            }
         }
     }
 
@@ -62,7 +75,59 @@ public class Door : CustomTileBase
         }
     }
 
+    // 문 잠그기
+    public void LockDoor()
+    {
+        isLocked = true;
+        UpdateDoorVisual();
+        SetCollider(true);  // 콜라이더 활성화 (통과불가)
+    }
 
+    // 문 열기
+    public void UnlockDoor()
+    {
+        isLocked = false;
+        canCollide = false; // 다음 진입 시 이동 허용
+        UpdateDoorVisual();
+        SetCollider(true); // 콜라이더 항상 켜두자
+    }
+
+    private void UpdateDoorVisual()
+    {
+        if (doorSpriteRenderer == null) return;
+
+        if (isLocked)
+        {
+            if (disabledDoorSprite != null)
+                doorSpriteRenderer.sprite = disabledDoorSprite;
+            else
+                doorSpriteRenderer.sprite = defaultDoorSprite;  // fallback
+        }
+        else
+        {
+            if (unlockedDoorSprite != null)
+                doorSpriteRenderer.sprite = unlockedDoorSprite;
+            else
+                doorSpriteRenderer.sprite = defaultDoorSprite;  // fallback
+        }
+    }
+
+    private void SetCollider(bool enabled)
+    {
+        if (boxCollider != null)
+        {
+            boxCollider.enabled = enabled;
+            boxCollider.isTrigger = !isLocked;  // 잠긴 문은 충돌체로 막고, 열린 문은 트리거로 통과 가능하게
+        }
+    }
+
+    // 외부에서 잠금 상태 확인 가능
+    public bool IsLocked()
+    {
+        return isLocked;
+    }
+
+    // 프로퍼티
     public Cell OwnerCell
     {
         get { return ownerCell; }
@@ -80,5 +145,4 @@ public class Door : CustomTileBase
         get { return nextDoorPos; }
         set { nextDoorPos = value; }
     }
-
 }

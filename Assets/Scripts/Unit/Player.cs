@@ -50,6 +50,13 @@ public class Player : MonoBehaviour
         UpdateClearCountUI();
 
         Vector2 moveInput = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
+
+        // clearCount가 1일 때 이동 방향 반전
+        if (GameTestManager.GetInstance().clearCount == 1)
+        {
+            moveInput *= -1;
+        }
+
         Vector2 moveVelocity = moveInput.normalized * speed;
         controller.Move(moveVelocity);
 
@@ -87,7 +94,7 @@ public class Player : MonoBehaviour
 
     private void UpdateClearCountUI()
     {
-        clearCountText.text = $"{GameTestManager.GetInstance().clearCount} / 3";
+        clearCountText.text = $"{GameTestManager.GetInstance().clearCount} / 4";
     }
 
 
@@ -100,7 +107,7 @@ public class Player : MonoBehaviour
         Debug.Log($"보스 타일 도달! 현재 클리어 횟수: {GameTestManager.GetInstance().clearCount}/3");
         SceneManager.LoadScene("Dungeon");
 
-        if (GameTestManager.GetInstance().clearCount >= 4) // 4번째에 게임 클리어
+        if (GameTestManager.GetInstance().clearCount >= 5) // 4번째에 게임 클리어
         {
             Debug.Log("게임 클리어! Test_Main 씬으로 이동합니다.");
             GameTestManager.GetInstance().clearCount = 0;
