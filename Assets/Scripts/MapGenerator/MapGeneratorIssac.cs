@@ -102,12 +102,12 @@ public class MapGeneratorIssac : MonoBehaviour
         InitMapInvisible();
         DungeonManager.GetInstance().LoadVisitedRoomsFromJSON();  // 미니맵밝아지는거
 
-        PlaceSwitchesInMap();
+        //PlaceSwitchesInMap();
 
-        //if (GameTestManager.GetInstance().clearCount == 2)
-        //{
-        //    PlaceSwitchesInMap();
-        //}
+        if (GameTestManager.GetInstance().clearCount == 2)
+        {
+            PlaceSwitchesInMap();
+        }
 
     }
 
@@ -476,11 +476,15 @@ public class MapGeneratorIssac : MonoBehaviour
         Vector3Int pos;
         Door doorInstance = Instantiate( doorObj ).GetComponent<Door>();
 
-        if (isBossCell /*&& GameTestManager.GetInstance().clearCount == 2*/)
+        if (isBossCell)
         {
             doorInstance.GetComponent<SpriteRenderer>().sprite = bossDoorSprite;
             doorInstance.SetOriginalSprite(bossDoorSprite);  // 원본 스프라이트로 저장
-            doorInstance.LockDoor();
+            if (GameTestManager.GetInstance().clearCount == 2)
+            {
+                doorInstance.LockDoor();
+            }
+            
             doorInstance.isBossDoor = true;
         }
         else
@@ -537,6 +541,7 @@ public class MapGeneratorIssac : MonoBehaviour
 
         prevDoor.NextDoor = postDoor;
         postDoor.NextDoor = prevDoor;
+
         if (isBossCell)
         {
             prevDoor.isBossDoor = true;
@@ -545,8 +550,11 @@ public class MapGeneratorIssac : MonoBehaviour
             prevDoor.GetComponent<SpriteRenderer>().sprite = bossDoorSprite;
             postDoor.GetComponent<SpriteRenderer>().sprite = bossDoorSprite;
 
-            prevDoor.LockDoor();
-            postDoor.LockDoor();
+            if (GameTestManager.GetInstance().clearCount == 2)
+            {
+                prevDoor.LockDoor();
+                postDoor.LockDoor();
+            }
         }
         prevDoor.NextDoor.OwnerCell = postCell;
         postDoor.NextDoor.OwnerCell = prevCell;

@@ -47,12 +47,8 @@ public class Door : CustomTileBase
 
         if (player)
         {
-            Debug.Log($"{gameObject.name} 문 트리거 진입. isLocked: {isLocked}, canCollide: {canCollide}");
-
-
             if (isLocked)
             {
-                Debug.Log("문이 잠겨있어 통과 불가");
                 // 잠긴 문일 때는 통과 불가 (콜라이더 활성화 상태)
                 return;
             }
@@ -61,12 +57,9 @@ public class Door : CustomTileBase
             {
                 if (nextDoor == null)
                 {
-                    Debug.LogError("nextDoor가 null입니다!");
                     return;
                 }
-
                 nextDoor.canCollide = true;
-                Debug.Log("문 통과. 플레이어 이동 시작.");
                 DungeonManager.GetInstance().SetPlayerPos(nextDoorPos);
                 DungeonManager.GetInstance().SetPlayerRoomID(nextDoor.ownerCell.id);
                 DungeonManager.GetInstance().SetMainCameraPosSmooth();
