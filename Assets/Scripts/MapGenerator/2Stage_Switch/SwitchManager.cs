@@ -7,8 +7,6 @@ public class SwitchManager : MonoBehaviour
 
     private List<SwitchController> switches = new List<SwitchController>();
 
-    [SerializeField] private Sprite bossDoorSprite;
-
     private void Awake()
     {
         if (Instance == null) Instance = this;
@@ -32,24 +30,22 @@ public class SwitchManager : MonoBehaviour
         Debug.Log("모든 스위치가 켜졌습니다! 완료!");
 
         // 보스방 문 열기
-        Door bossDoor = FindBossDoor();
-        if (bossDoor != null)
+        foreach (var door in FindBossDoors())
         {
-            bossDoor.UnlockDoor();
+            door.UnlockDoor();
         }
     }
 
     // 보스방 문 찾는 함수 예시 (씬에서 태그나 이름, 리스트 등으로 찾을 수 있음)
-    private Door FindBossDoor()
+    private List<Door> FindBossDoors()
     {
         Door[] doors = GameObject.FindObjectsOfType<Door>();
+        List<Door> result = new List<Door>();
         foreach (var door in doors)
         {
-            if (door.GetComponent<SpriteRenderer>().sprite == bossDoorSprite)
-            {
-                return door;
-            }
+            if (door.isBossDoor)
+                result.Add(door);
         }
-        return null;
+        return result;
     }
 }

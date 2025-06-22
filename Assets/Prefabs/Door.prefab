@@ -161,7 +161,7 @@ SpriteRenderer:
   m_SortingLayerID: 1241135713
   m_SortingLayer: 3
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300168, guid: 9603be6d9ac69924f945566fb9497bde, type: 3}
+  m_Sprite: {fileID: 21300024, guid: 9603be6d9ac69924f945566fb9497bde, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -186,6 +186,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   scale: 0
   posWorld: {x: 0, y: 0}
+  isBossDoor: 0
   ownerCell: {fileID: 0}
   nextDoor: {fileID: 0}
   nextDoorPos: {x: 0, y: 0, z: 0}

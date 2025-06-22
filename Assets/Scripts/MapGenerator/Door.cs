@@ -4,6 +4,8 @@ using UnityEngine;
 [Serializable]
 public class Door : CustomTileBase
 {
+    [SerializeField] public bool isBossDoor = false;
+
     private bool canCollide = false;
     private bool isLocked = true; // 잠금 상태 변수
 
@@ -11,9 +13,9 @@ public class Door : CustomTileBase
     [SerializeField] private Door nextDoor;
     [SerializeField] private Vector3Int nextDoorPos;
 
-    [SerializeField] private Sprite defaultDoorSprite;
     [SerializeField] private Sprite disabledDoorSprite;  // 잠긴 문 이미지 (lockedSprite)
-    [SerializeField] private Sprite unlockedDoorSprite;  // 열린 문 이미지 (unlockedSprite)
+
+    private Sprite originalDoorSprite;
 
     private SpriteRenderer doorSpriteRenderer;
     private BoxCollider2D boxCollider;
@@ -29,8 +31,9 @@ public class Door : CustomTileBase
             boxCollider.isTrigger = true;
         }
 
-
-        UpdateDoorVisual();
+        // sprite 저장 (MapGeneratorIssac에서 설정한 이미지 기억해두기)
+        if (doorSpriteRenderer != null)
+            originalDoorSprite = doorSpriteRenderer.sprite;
     }
 
     public Door(Vector2 _posWorld) : base(_posWorld)
@@ -44,15 +47,26 @@ public class Door : CustomTileBase
 
         if (player)
         {
+            Debug.Log($"{gameObject.name} 문 트리거 진입. isLocked: {isLocked}, canCollide: {canCollide}");
+
+
             if (isLocked)
             {
+                Debug.Log("문이 잠겨있어 통과 불가");
                 // 잠긴 문일 때는 통과 불가 (콜라이더 활성화 상태)
                 return;
             }
 
             if (!canCollide)
             {
+                if (nextDoor == null)
+                {
+                    Debug.LogError("nextDoor가 null입니다!");
+                    return;
+                }
+
                 nextDoor.canCollide = true;
+                Debug.Log("문 통과. 플레이어 이동 시작.");
                 DungeonManager.GetInstance().SetPlayerPos(nextDoorPos);
                 DungeonManager.GetInstance().SetPlayerRoomID(nextDoor.ownerCell.id);
                 DungeonManager.GetInstance().SetMainCameraPosSmooth();
@@ -64,6 +78,11 @@ public class Door : CustomTileBase
                 }
             }
         }
+    }
+
+    public void SetOriginalSprite(Sprite sprite)
+    {
+        originalDoorSprite = sprite;
     }
 
     private void OnTriggerExit2D(Collider2D other)
@@ -79,8 +98,10 @@ public class Door : CustomTileBase
     public void LockDoor()
     {
         isLocked = true;
-        UpdateDoorVisual();
         SetCollider(true);  // 콜라이더 활성화 (통과불가)
+
+        if (doorSpriteRenderer != null && disabledDoorSprite != null)
+            doorSpriteRenderer.sprite = disabledDoorSprite;
     }
 
     // 문 열기
@@ -88,28 +109,11 @@ public class Door : CustomTileBase
     {
         isLocked = false;
         canCollide = false; // 다음 진입 시 이동 허용
-        UpdateDoorVisual();
         SetCollider(true); // 콜라이더 항상 켜두자
-    }
 
-    private void UpdateDoorVisual()
-    {
-        if (doorSpriteRenderer == null) return;
 
-        if (isLocked)
-        {
-            if (disabledDoorSprite != null)
-                doorSpriteRenderer.sprite = disabledDoorSprite;
-            else
-                doorSpriteRenderer.sprite = defaultDoorSprite;  // fallback
-        }
-        else
-        {
-            if (unlockedDoorSprite != null)
-                doorSpriteRenderer.sprite = unlockedDoorSprite;
-            else
-                doorSpriteRenderer.sprite = defaultDoorSprite;  // fallback
-        }
+        if (doorSpriteRenderer != null && originalDoorSprite != null)
+            doorSpriteRenderer.sprite = originalDoorSprite;
     }
 
     private void SetCollider(bool enabled)

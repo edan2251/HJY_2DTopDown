@@ -24,6 +24,7 @@ public enum EDir
 
 public class MapGeneratorIssac : MonoBehaviour
 {
+
     [SerializeField] private GameObject switchPrefab;
     private List<GameObject> spawnedSwitches = new List<GameObject>(); // 배치된 스위치 목록
     private static int totalSwitchCount = 0; // 전체 스위치 수 카운트
@@ -354,7 +355,6 @@ public class MapGeneratorIssac : MonoBehaviour
                 // 위치 등록
                 DungeonManager.GetInstance().AddToTilemapDic(roomID, groundTilemap, curPos);
 
-                // **여기서 스위치 배치 호출 삭제!!**
             }
         }
 
@@ -479,7 +479,15 @@ public class MapGeneratorIssac : MonoBehaviour
         if (isBossCell /*&& GameTestManager.GetInstance().clearCount == 2*/)
         {
             doorInstance.GetComponent<SpriteRenderer>().sprite = bossDoorSprite;
-            doorInstance.LockDoor();  // 문 잠금 상태 설정
+            doorInstance.SetOriginalSprite(bossDoorSprite);  // 원본 스프라이트로 저장
+            doorInstance.LockDoor();
+            doorInstance.isBossDoor = true;
+        }
+        else
+        {
+            // 일반 문일 경우 현재 스프라이트 원본 저장
+            Sprite currentSprite = doorInstance.GetComponent<SpriteRenderer>().sprite;
+            doorInstance.SetOriginalSprite(currentSprite);
         }
 
         doorInstance.OwnerCell = cell;
@@ -529,6 +537,17 @@ public class MapGeneratorIssac : MonoBehaviour
 
         prevDoor.NextDoor = postDoor;
         postDoor.NextDoor = prevDoor;
+        if (isBossCell)
+        {
+            prevDoor.isBossDoor = true;
+            postDoor.isBossDoor = true;
+
+            prevDoor.GetComponent<SpriteRenderer>().sprite = bossDoorSprite;
+            postDoor.GetComponent<SpriteRenderer>().sprite = bossDoorSprite;
+
+            prevDoor.LockDoor();
+            postDoor.LockDoor();
+        }
         prevDoor.NextDoor.OwnerCell = postCell;
         postDoor.NextDoor.OwnerCell = prevCell;
     }
