@@ -102,11 +102,15 @@ public class MapGeneratorIssac : MonoBehaviour
         InitMapInvisible();
         DungeonManager.GetInstance().LoadVisitedRoomsFromJSON();  // 미니맵밝아지는거
 
-        //PlaceSwitchesInMap();
-
         if (GameTestManager.GetInstance().clearCount == 2)
         {
             PlaceSwitchesInMap();
+        }
+
+        // 3층이면 최단거리 경로 생성
+        if (GameTestManager.GetInstance().clearCount == 3)
+        {
+            DungeonManager.GetInstance().shortestPath = DungeonManager.GetInstance().GetShortestPathFromStartToBoss();
         }
 
     }
@@ -146,7 +150,7 @@ public class MapGeneratorIssac : MonoBehaviour
         }
     }
 
-    void InitPlayer()
+    public void InitPlayer()
     {
         if (player == null)
             return;
@@ -163,7 +167,9 @@ public class MapGeneratorIssac : MonoBehaviour
 
         DungeonManager.GetInstance().SetPlayerTransform(worldPos, groundTilemap.cellSize.x * 1f);
 
-        player.GetComponent<Player>().Speed *= tileSizePerCell * 0.5f * player.transform.localScale.x;
+        Player playerScript = player.GetComponent<Player>();
+        playerScript.FixSpeed = playerScript.BaseSpeed * tileSizePerCell * 0.5f * player.transform.localScale.x;
+
     }
 
     /*

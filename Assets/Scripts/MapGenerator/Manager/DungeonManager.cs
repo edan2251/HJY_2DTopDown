@@ -8,6 +8,7 @@ using System.IO;
 
 public class DungeonManager : MonoBehaviour
 {
+    public List<int> shortestPath = new List<int>();
 
     public struct FTileInfoByCellID
     {
@@ -22,6 +23,8 @@ public class DungeonManager : MonoBehaviour
     };
 
     private static DungeonManager instance;
+
+    public Vector3Int playerSpawnCellPos;
 
     //public int enemyCount;
     public int playerRoomID = 1;    // 플레이어 방도 1로 초기화
@@ -241,6 +244,31 @@ public class DungeonManager : MonoBehaviour
 
     public void SetPlayerRoomID(int newRoomID)
     {
+        // 강제 이동 기능은 clearCount == 3일 때만 동작
+        if (GameTestManager.GetInstance().clearCount == 3)
+        {
+            // 예외 방지
+            if (shortestPath == null || shortestPath.Count == 0)
+            {
+                Debug.LogWarning("최단 경로가 설정되어 있지 않습니다.");
+            }
+            else
+            {
+                if (!shortestPath.Contains(newRoomID))
+                {
+                    Debug.Log("최단 경로가 아닌 방 입장 시도! 1번 방으로 강제 이동!");
+                    newRoomID = 1;
+
+                    MapGeneratorIssac mapGen = FindObjectOfType<MapGeneratorIssac>();
+                    if (mapGen != null)
+                    {
+                        mapGen.InitPlayer();
+                    }
+                }
+            }
+        }
+
+        // 기존 로직 유지
         if (playerRoomID != newRoomID)
         {
             previousRoomID = playerRoomID;
@@ -248,7 +276,6 @@ public class DungeonManager : MonoBehaviour
 
             isRoomVisited.Add(newRoomID);
 
-            // 현재 방과 이전 방만 보이게, 나머지는 숨기기
             foreach (var id in tilemapDic.Keys)
             {
                 if (id == playerRoomID || id == previousRoomID)
@@ -256,15 +283,17 @@ public class DungeonManager : MonoBehaviour
                 else
                     SetVisibilityTiles(id, false);
             }
+
             if (previousRoomID != -1)
             {
                 FadeOutRoom(previousRoomID);
-            }  // 페이드아웃
+            }
         }
 
-        // 방문 정보 저장
         SaveVisitedRoomsToJSON();
     }
+
+
 
     public void SetPlayerPos(Vector3Int pos)
     {
@@ -442,6 +471,69 @@ public class DungeonManager : MonoBehaviour
             color.a = 0f;
             tileInfo.tilemap.SetColor(tileInfo.pos, color);
         }
+    }
+
+    //최단거리 구하기
+    public List<int> GetShortestPathFromStartToBoss()
+    {
+        int start = 1;
+        int goal = 16;
+
+        Dictionary<int, int> cameFrom = new Dictionary<int, int>();
+        Queue<int> queue = new Queue<int>();
+        HashSet<int> visited = new HashSet<int>();
+
+        queue.Enqueue(start);
+        visited.Add(start);
+
+        while (queue.Count > 0)
+        {
+            int current = queue.Dequeue();
+
+            if (current == goal)
+                break;
+
+            if (!adjacentCellDic.ContainsKey(current))
+                continue;
+
+            foreach (var neighborCell in adjacentCellDic[current])
+            {
+                int neighborID = neighborCell.id;
+                if (!visited.Contains(neighborID))
+                {
+                    visited.Add(neighborID);
+                    cameFrom[neighborID] = current;
+                    queue.Enqueue(neighborID);
+                }
+            }
+        }
+
+        // 경로 추적
+        List<int> path = new List<int>();
+        int cur = goal;
+        while (cur != start)
+        {
+            path.Add(cur);
+            if (!cameFrom.ContainsKey(cur))
+            {
+                Debug.LogWarning("최단 경로 없음");
+                return new List<int>();
+            }
+            cur = cameFrom[cur];
+        }
+        path.Add(start);
+        path.Reverse();
+
+        // 디버그 출력
+        string pathLog = "최단 경로: ";
+        foreach (int id in path)
+        {
+            pathLog += id + " -> ";
+        }
+        pathLog = pathLog.TrimEnd('-', '>', ' ');
+        Debug.Log(pathLog);
+
+        return path;
 
 
     }

@@ -9,7 +9,9 @@ using TMPro; // TextMeshPro 사용 가능
 [RequireComponent(typeof(PlayerController))]
 public class Player : MonoBehaviour
 {
-    [SerializeField] private float speed = 1f;
+    public float BaseSpeed = 10f;
+    public float FixSpeed;
+    [SerializeField] private float speed = 5f;
     private PlayerController controller;
     private SpriteRenderer spriteRenderer;
     //private Rigidbody2D rigid;
