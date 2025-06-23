@@ -393,6 +393,17 @@ public class DungeonManager : MonoBehaviour
         }
     }
 
+    public void ShowShortestPathOnMinimap()
+    {
+        if (shortestPath == null || shortestPath.Count == 0)
+            return;
+
+        foreach (int id in shortestPath)
+        {
+            ActivateMinimap(id, true); // ¹àÀº »ö(Èò»ö)À¸·Î Ç¥½Ã
+        }
+    }
+
     public bool IsCellAdjacent(Cell prevCell, Cell postCell)
     {
         return adjacentCellDic.ContainsKey(prevCell.id) && adjacentCellDic[prevCell.id].Contains(postCell);

@@ -66,8 +66,11 @@ public class Door : CustomTileBase
 
                 if (!GameTestManager.GetInstance().allMapVisibleMode)
                 {
-                    DungeonManager.GetInstance().ActivateMinimap(nextDoor.ownerCell.id, true);
-                    DungeonManager.GetInstance().ActivateMinimap(ownerCell.id, false);
+                    if (GameTestManager.GetInstance().clearCount != 3)  // 3스테이지가 아니면
+                    {
+                        DungeonManager.GetInstance().ActivateMinimap(nextDoor.ownerCell.id, true);
+                        DungeonManager.GetInstance().ActivateMinimap(ownerCell.id, false);
+                    }
                 }
             }
         }

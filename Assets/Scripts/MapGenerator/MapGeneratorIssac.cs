@@ -111,8 +111,14 @@ public class MapGeneratorIssac : MonoBehaviour
         if (GameTestManager.GetInstance().clearCount == 3)
         {
             DungeonManager.GetInstance().shortestPath = DungeonManager.GetInstance().GetShortestPathFromStartToBoss();
+            DungeonManager.GetInstance().ShowShortestPathOnMinimap();
         }
-        DungeonManager.GetInstance().LoadVisitedRoomsFromJSON();  // ¹Ì´Ï¸Ê¹à¾ÆÁö´Â°Å
+
+        if (GameTestManager.GetInstance().clearCount != 3)
+        {
+            DungeonManager.GetInstance().LoadVisitedRoomsFromJSON();  // ¹Ì´Ï¸Ê¹à¾ÆÁö´Â°Å
+        }
+
     }
 
     void InitMap()
@@ -206,16 +212,6 @@ public class MapGeneratorIssac : MonoBehaviour
             } 
         }
     }
-
-    //void DrawBossRoom(Cell cell)
-    //{
-    //    (bool, List<Cell>) checkBossRoomResult = CheckBossRoom( cell );
-    //    if (checkBossRoomResult.Item1)
-    //    {
-    //        DrawCell( checkBossRoomResult.Item2 );
-    //        DrawnBossCell = true;
-    //    }
-    //}
     void DrawBossRoom(Cell cell)
     {
         (bool, List<Cell>) checkBossRoomResult = CheckBossRoom(cell);
