@@ -100,7 +100,7 @@ public class MapGeneratorIssac : MonoBehaviour
         DungeonManager.GetInstance().SetCameraToMapCenter(); //맵 중앙화
         InitPlayer();
         InitMapInvisible();
-        DungeonManager.GetInstance().LoadVisitedRoomsFromJSON();  // 미니맵밝아지는거
+
 
         if (GameTestManager.GetInstance().clearCount == 2)
         {
@@ -112,7 +112,7 @@ public class MapGeneratorIssac : MonoBehaviour
         {
             DungeonManager.GetInstance().shortestPath = DungeonManager.GetInstance().GetShortestPathFromStartToBoss();
         }
-
+        DungeonManager.GetInstance().LoadVisitedRoomsFromJSON();  // 미니맵밝아지는거
     }
 
     void InitMap()
@@ -207,12 +207,33 @@ public class MapGeneratorIssac : MonoBehaviour
         }
     }
 
+    //void DrawBossRoom(Cell cell)
+    //{
+    //    (bool, List<Cell>) checkBossRoomResult = CheckBossRoom( cell );
+    //    if (checkBossRoomResult.Item1)
+    //    {
+    //        DrawCell( checkBossRoomResult.Item2 );
+    //        DrawnBossCell = true;
+    //    }
+    //}
     void DrawBossRoom(Cell cell)
     {
-        (bool, List<Cell>) checkBossRoomResult = CheckBossRoom( cell );
+        (bool, List<Cell>) checkBossRoomResult = CheckBossRoom(cell);
         if (checkBossRoomResult.Item1)
         {
-            DrawCell( checkBossRoomResult.Item2 );
+            int bossRoomID = 16;
+
+            foreach (Cell bossCell in checkBossRoomResult.Item2)
+            {
+                bossCell.id = bossRoomID;
+                bossCell.isBossRoom = true;
+                DungeonManager.GetInstance().AddToSameRoomDic(bossCell); // 반드시 직접 호출!
+            }
+
+            isBossCell = true; // isBossCell을 설정한 뒤에
+            DrawCell(checkBossRoomResult.Item2); // 셀 그리기
+            isBossCell = false;
+
             DrawnBossCell = true;
         }
     }
