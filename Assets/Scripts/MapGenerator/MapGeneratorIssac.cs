@@ -95,6 +95,7 @@ public class MapGeneratorIssac : MonoBehaviour
 
     void Start()
     {
+        DungeonManager.GetInstance().UpdateMapUI();
         InitMap();
         GenerateRoom( cellList[ cellList.GetLength( 1 ) / 2, cellList.GetLength( 0 ) / 2 ] );
         DungeonManager.GetInstance().SetCameraToMapCenter(); //¸Ê Áß¾ÓÈ­
@@ -112,13 +113,14 @@ public class MapGeneratorIssac : MonoBehaviour
         {
             DungeonManager.GetInstance().shortestPath = DungeonManager.GetInstance().GetShortestPathFromStartToBoss();
             DungeonManager.GetInstance().ShowShortestPathOnMinimap();
+            DungeonManager.GetInstance().SetFullMapCameraBounds();
         }
 
         if (GameTestManager.GetInstance().clearCount != 3)
         {
             DungeonManager.GetInstance().LoadVisitedRoomsFromJSON();  // ¹Ì´Ï¸Ê¹à¾ÆÁö´Â°Å
         }
-
+        DungeonManager.GetInstance().HighlightBossRoomOnMinimap(16);
     }
 
     void InitMap()

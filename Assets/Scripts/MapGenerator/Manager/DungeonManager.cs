@@ -33,7 +33,11 @@ public class DungeonManager : MonoBehaviour
     public int tileNumPerCell;
     public Player player;
     public Camera mainCamera;
-    public Camera minimapCamera;
+    public Camera miniMapCamera;
+    public Camera fullMapCamera;
+    public GameObject minimapUI;   // Canvas 아래 Minimap 오브젝트
+    public GameObject fullmapUI;   // Canvas 아래 Fullmap 오브젝트
+
     public Cell[,] cellList;
     public Tilemap tilemap;
     public Dictionary<int, List<FTileInfoByCellID>> tilemapDic;
@@ -61,6 +65,63 @@ public class DungeonManager : MonoBehaviour
     {
         public int floor;              // clearCount 값
         public List<int> visitedRoomIDs = new List<int>();  // 방문한 방 ID 리스트
+    }
+
+    public void UpdateMapUI()
+    {
+        if (GameTestManager.GetInstance().clearCount == 3)
+        {
+            fullmapUI.SetActive(true);
+            minimapUI.SetActive(false);
+
+            fullMapCamera.gameObject.SetActive(true);
+            miniMapCamera.gameObject.SetActive(false);
+        }
+        else
+        {
+            fullmapUI.SetActive(false);
+            minimapUI.SetActive(true);
+
+            fullMapCamera.gameObject.SetActive(false);
+            miniMapCamera.gameObject.SetActive(true);
+        }
+    }
+
+    public void SetFullMapCameraBounds()
+    {
+        if (fullMapCamera == null) return;
+
+        Bounds totalBounds = new Bounds(Vector3.zero, Vector3.zero);
+        bool first = true;
+
+        foreach (var room in sameRoomDic.Values)
+        {
+            foreach (var cell in room)
+            {
+                Vector3 pos = cell.transform.position;
+
+                if (first)
+                {
+                    totalBounds = new Bounds(pos, Vector3.zero);
+                    first = false;
+                }
+                else
+                {
+                    totalBounds.Encapsulate(pos);
+                }
+            }
+        }
+
+        Vector3 center = totalBounds.center;
+        Vector3 size = totalBounds.size;
+
+        fullMapCamera.transform.position = new Vector3(center.x, center.y, -10f);
+
+        float screenAspect = fullMapCamera.aspect;
+        float sizeX = size.x / screenAspect;
+        float sizeY = size.y;
+
+        fullMapCamera.orthographicSize = Mathf.Max(sizeX, sizeY) * 0.55f;
     }
 
     public void SaveVisitedRoomsToJSON()
@@ -195,7 +256,7 @@ public class DungeonManager : MonoBehaviour
         Vector3 center = totalPos / cellListInRoom.Count;
 
         mainCamera.transform.position = new Vector3(center.x, center.y, -10);
-        minimapCamera.transform.position = new Vector3(center.x, center.y, -10);
+        miniMapCamera.transform.position = new Vector3(center.x, center.y, -10);
     }
 
 
@@ -213,7 +274,7 @@ public class DungeonManager : MonoBehaviour
                 0.3f // 감속 시간 (작을수록 빠르게 붙음, 0.2~0.5 추천)
             );
 
-            minimapCamera.transform.position = mainCamera.transform.position;
+            miniMapCamera.transform.position = mainCamera.transform.position;
 
             // 목표 위치에 충분히 가까우면 이동 종료
             if (Vector3.Distance(mainCamera.transform.position, targetCameraPos) < 0.05f)
@@ -393,14 +454,28 @@ public class DungeonManager : MonoBehaviour
         }
     }
 
+    public void HighlightBossRoomOnMinimap(int id)
+    {
+        if (!sameRoomDic.ContainsKey(id)) return;
+
+        foreach (Cell cell in sameRoomDic[id])
+        {
+            cell.activeColor = new Color(1f, 0.3f, 0f); // 주황색 계열로 미리 지정
+            SpriteRenderer minimapRenderer = cell.transform.Find("minimapSprite").GetComponent<SpriteRenderer>();
+            minimapRenderer.color = cell.activeColor;
+        }
+    }
+
     public void ShowShortestPathOnMinimap()
     {
         if (shortestPath == null || shortestPath.Count == 0)
             return;
 
-        foreach (int id in shortestPath)
+        // 전체 방 순회 (sameRoomDic의 키가 방 ID)
+        foreach (int id in sameRoomDic.Keys)
         {
-            ActivateMinimap(id, true); // 밝은 색(흰색)으로 표시
+            bool isOnShortestPath = shortestPath.Contains(id);
+            ActivateMinimap(id, isOnShortestPath);
         }
     }
 
