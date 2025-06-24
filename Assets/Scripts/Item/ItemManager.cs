@@ -8,12 +8,12 @@ public class ItemManager : MonoBehaviour
 {
     public static ItemManager Instance;
 
-    [System.Serializable]
-    public class ItemSaveData
-    {
-        public int speedBoostCount;
-        public int reviveCount;
-    }
+    //[System.Serializable]
+    //public class ItemSaveData
+    //{
+    //    public int speedBoostCount;
+    //    public int reviveCount;
+    //}
 
     public int GetSpeedBoostCount() => speedBoostCount;
     public int GetReviveCount() => reviveCount;
@@ -21,7 +21,7 @@ public class ItemManager : MonoBehaviour
     public ItemData speedBoostItemData;
     public ItemData reviveItemData;
 
-    private string SavePath => Path.Combine(Application.persistentDataPath, "item_save.json");
+    //private string SavePath => Path.Combine(Application.persistentDataPath, "item_save.json");
 
     public ItemData GetReviveItemData()
     {
@@ -181,30 +181,37 @@ public class ItemManager : MonoBehaviour
 
     private void SaveItems()
     {
-        ItemSaveData data = new ItemSaveData
-        {
-            speedBoostCount = this.speedBoostCount,
-            reviveCount = this.reviveCount
-        };
+        //ItemSaveData data = new ItemSaveData
+        //{
+        //    speedBoostCount = this.speedBoostCount,
+        //    reviveCount = this.reviveCount
+        //};
 
-        string json = JsonUtility.ToJson(data, true);
-        System.IO.File.WriteAllText(SavePath, json);
+        //string json = JsonUtility.ToJson(data, true);
+        //System.IO.File.WriteAllText(SavePath, json);
+
+        PlayerPrefs.SetInt("SpeedBoostCount", speedBoostCount);
+        PlayerPrefs.SetInt("ReviveCount", reviveCount);
+        PlayerPrefs.Save();
     }
 
     private void LoadItems()
     {
-        if (System.IO.File.Exists(SavePath))
-        {
-            string json = System.IO.File.ReadAllText(SavePath);
-            ItemSaveData data = JsonUtility.FromJson<ItemSaveData>(json);
-            this.speedBoostCount = data.speedBoostCount;
-            this.reviveCount = data.reviveCount;
-        }
-        else
-        {
-            speedBoostCount = 0;
-            reviveCount = 0;
-        }
+        //if (System.IO.File.Exists(SavePath))
+        //{
+        //    string json = System.IO.File.ReadAllText(SavePath);
+        //    ItemSaveData data = JsonUtility.FromJson<ItemSaveData>(json);
+        //    this.speedBoostCount = data.speedBoostCount;
+        //    this.reviveCount = data.reviveCount;
+        //}
+        //else
+        //{
+        //    speedBoostCount = 0;
+        //    reviveCount = 0;
+        //}
+
+        speedBoostCount = PlayerPrefs.GetInt("SpeedBoostCount", 0);
+        reviveCount = PlayerPrefs.GetInt("ReviveCount", 0);
 
         UpdateSpeedBoostUI();
         UpdateReviveUI();

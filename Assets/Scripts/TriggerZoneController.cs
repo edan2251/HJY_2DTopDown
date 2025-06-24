@@ -32,12 +32,12 @@ public class TriggerZoneController : MonoBehaviour
             if (itemDataResetter != null)
             {
                 itemDataResetter.ResetItemData();
-                messageDisplay.ShowMessage("던전에 대한 기억이 없어졌어 . . .");
+                messageDisplay.ShowMessage("더 이상 필요 없어 !");
             }
             else if (visitedRoomsResetter != null)
             {
                 visitedRoomsResetter.ResetVisitedRooms();
-                messageDisplay.ShowMessage("더 이상 필요 없어 !");
+                messageDisplay.ShowMessage("던전에 대한 기억이 없어졌어 . . .");
             }
             else if (quitMenu != null)
             {
