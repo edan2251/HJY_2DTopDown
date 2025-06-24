@@ -29,6 +29,8 @@ public class Player : MonoBehaviour
 
     [SerializeField] private TextMeshProUGUI clearCountText; // UI에 클리어 횟수 표시
 
+    private float pauseStartTime = -1f; // minimap 정지 시작 시각
+    private float pauseDelay = 3f;      // 대기 시간 (초)
 
 
     void Start()
@@ -49,6 +51,41 @@ public class Player : MonoBehaviour
 
     void Update()
     {
+        DungeonManager mapManager = FindObjectOfType<DungeonManager>();
+
+        // minimap 때문에 멈춰있는 경우
+        if (mapManager != null && mapManager.isPausedByMap)
+        {
+            // 정지 시작 시간 기록 (한 번만)
+            if (pauseStartTime < 0f)
+            {
+                pauseStartTime = Time.unscaledTime;
+            }
+
+            float elapsed = Time.unscaledTime - pauseStartTime;
+
+            if (elapsed >= pauseDelay)
+            {
+                // 3초가 지난 후 입력이 있으면 재개
+                if (Input.GetAxisRaw("Horizontal") != 0 || Input.GetAxisRaw("Vertical") != 0)
+                {
+                    mapManager.ResumeFromMap();
+                    pauseStartTime = -1f; // 초기화
+                    Debug.Log("3초 대기 후 이동 감지 → 게임 재개");
+                }
+            }
+            else
+            {
+                // 아직 대기 중이면 안내 메시지 출력 가능
+            }
+
+            return;
+        }
+        else
+        {
+            pauseStartTime = -1f; // 멈춘 상태가 아니면 초기화
+        }
+
         UpdateClearCountUI();
 
         Vector2 moveInput = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));

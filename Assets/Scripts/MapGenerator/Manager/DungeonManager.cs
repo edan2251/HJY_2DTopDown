@@ -26,6 +26,9 @@ public class DungeonManager : MonoBehaviour
 
     public Vector3Int playerSpawnCellPos;
 
+    public GameObject startHintText;
+    public TextMeshProUGUI countdownText;
+
     //public int enemyCount;
     public int playerRoomID = 1;    // 플레이어 방도 1로 초기화
     //public int difficulty;
@@ -67,6 +70,7 @@ public class DungeonManager : MonoBehaviour
         public List<int> visitedRoomIDs = new List<int>();  // 방문한 방 ID 리스트
     }
 
+    public bool isPausedByMap = false;
     public void UpdateMapUI()
     {
         if (GameTestManager.GetInstance().clearCount == 3)
@@ -76,6 +80,9 @@ public class DungeonManager : MonoBehaviour
 
             fullMapCamera.gameObject.SetActive(true);
             miniMapCamera.gameObject.SetActive(false);
+            Time.timeScale = 0f;
+            isPausedByMap = true;
+            StartCoroutine(ShowCountdown());
         }
         else
         {
@@ -85,6 +92,31 @@ public class DungeonManager : MonoBehaviour
             fullMapCamera.gameObject.SetActive(false);
             miniMapCamera.gameObject.SetActive(true);
         }
+    }
+
+    public void ResumeFromMap()
+    {
+        fullmapUI.SetActive(false);
+        Time.timeScale = 1f;
+        isPausedByMap = false;
+    }
+
+    private IEnumerator ShowCountdown()
+    {
+        if (countdownText == null) yield break;
+
+        int count = 3;
+        while (count > 0)
+        {
+            countdownText.text = count.ToString();
+            yield return new WaitForSecondsRealtime(1f);
+            count--;
+        }
+
+        countdownText.gameObject.SetActive(false);
+
+        if (startHintText != null)
+            startHintText.SetActive(true);
     }
 
     public void SetFullMapCameraBounds()

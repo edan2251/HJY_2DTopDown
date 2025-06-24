@@ -26,7 +26,7 @@ public class SceneChangeManager : MonoBehaviour
         Color c = fadeImage.color;
         while (t > 0)
         {
-            t -= Time.deltaTime;
+            t -= Time.unscaledDeltaTime;
             c.a = t / fadeDuration;
             fadeImage.color = c;
             yield return null;
@@ -41,7 +41,7 @@ public class SceneChangeManager : MonoBehaviour
         Color c = fadeImage.color;
         while (t < fadeDuration)
         {
-            t += Time.deltaTime;
+            t += Time.unscaledDeltaTime;
             c.a = t / fadeDuration;
             fadeImage.color = c;
             yield return null;
