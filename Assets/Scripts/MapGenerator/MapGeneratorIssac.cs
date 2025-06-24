@@ -395,7 +395,7 @@ public class MapGeneratorIssac : MonoBehaviour
         totalSwitchCount = 0;
         switchedRoomIDs.Clear();
 
-        // 기존에 생성된 스위치가 있다면 삭제 (재생성 대비)
+        // 기존 스위치 제거
         foreach (var sw in spawnedSwitches)
         {
             if (sw != null)
@@ -405,7 +405,6 @@ public class MapGeneratorIssac : MonoBehaviour
 
         List<Cell> candidateRooms = new List<Cell>();
 
-        // 보스방 제외, 특정 방 제외하고 스위치 생성 가능한 방 모으기
         foreach (Cell cell in cellList)
         {
             if (cell.isChecked && !cell.isBossRoom && cell.id != 1 && cell.id != 16)
@@ -422,11 +421,14 @@ public class MapGeneratorIssac : MonoBehaviour
 
             if (!switchedRoomIDs.Contains(room.id))
             {
-                // 스위치 생성 좌표 결정 (타일맵 중앙 같은 위치)
+                // 위치 계산
                 Vector3Int pos = new Vector3Int(room.tilemapLocalPos.x + tileNumPerCell / 2, room.tilemapLocalPos.y + tileNumPerCell / 2, 0);
                 Vector3 worldPos = groundTilemap.CellToWorld(pos) + new Vector3(0.5f, 0.5f, -1f);
 
+                // 스위치 생성 및 설정
                 GameObject sw = Instantiate(switchPrefab, worldPos, Quaternion.identity);
+                sw.GetComponent<SwitchController>().roomID = room.id;
+                sw.GetComponent<SwitchController>().SetVisibility(false); // 처음엔 숨겨둠
                 spawnedSwitches.Add(sw);
 
                 totalSwitchCount++;
@@ -434,6 +436,7 @@ public class MapGeneratorIssac : MonoBehaviour
             }
         }
     }
+
 
 
     void DrawWall( Cell cell, EDir dir )

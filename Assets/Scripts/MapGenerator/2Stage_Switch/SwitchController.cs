@@ -2,6 +2,7 @@ using UnityEngine;
 
 public class SwitchController : MonoBehaviour
 {
+    public int roomID;
     public SpriteRenderer spriteRenderer;
     public Sprite offSprite;
     public Sprite onSprite;
@@ -9,6 +10,11 @@ public class SwitchController : MonoBehaviour
     private bool isOn = false;
     private Transform player;
     public float interactDistance = 2f;
+
+    private void Awake()
+    {
+        spriteRenderer = GetComponent<SpriteRenderer>();
+    }
 
     private void Start()
     {
@@ -43,6 +49,13 @@ public class SwitchController : MonoBehaviour
                 ToggleSwitch();
             }
         }
+    }
+
+    public void SetVisibility(bool visible)
+    {
+        spriteRenderer.enabled = visible;
+        // 필요하면 Collider도 같이 비활성화
+        //GetComponent<Collider2D>().enabled = visible;
     }
 
     private void ToggleSwitch()

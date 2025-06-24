@@ -133,7 +133,7 @@ public class Player : MonoBehaviour
 
     private void UpdateClearCountUI()
     {
-        clearCountText.text = $"{GameTestManager.GetInstance().clearCount} / 4";
+        clearCountText.text = $"{GameTestManager.GetInstance().clearCount} / 3";
     }
 
 
@@ -143,10 +143,10 @@ public class Player : MonoBehaviour
 
         // 2초 후 클리어 횟수 증가
         GameTestManager.GetInstance().clearCount++;
-        Debug.Log($"보스 타일 도달! 현재 클리어 횟수: {GameTestManager.GetInstance().clearCount}/3");
+        Debug.Log($"보스 타일 도달! 현재 클리어 횟수: {GameTestManager.GetInstance().clearCount}/2");
         SceneManager.LoadScene("Dungeon");
 
-        if (GameTestManager.GetInstance().clearCount >= 5) // 4번째에 게임 클리어
+        if (GameTestManager.GetInstance().clearCount >= 4) // 4번째에 게임 클리어
         {
             Debug.Log("게임 클리어! Test_Main 씬으로 이동합니다.");
             GameTestManager.GetInstance().clearCount = 0;

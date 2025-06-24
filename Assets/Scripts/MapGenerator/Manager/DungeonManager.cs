@@ -383,10 +383,24 @@ public class DungeonManager : MonoBehaviour
             }
         }
 
+        SetSwitchVisibility(playerRoomID);
         SaveVisitedRoomsToJSON();
     }
 
-
+    public void SetSwitchVisibility(int activeRoomID)
+    {
+        foreach (var sw in FindObjectsOfType<SwitchController>())
+        {
+            if (sw.roomID == activeRoomID)
+            {
+                sw.SetVisibility(true);
+            }
+            else
+            {
+                sw.SetVisibility(false);
+            }
+        }
+    }
 
     public void SetPlayerPos(Vector3Int pos)
     {
