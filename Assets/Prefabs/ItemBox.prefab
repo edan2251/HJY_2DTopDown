@@ -74,7 +74,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: -1993711187
   m_SortingLayer: 4
-  m_SortingOrder: 6
+  m_SortingOrder: 5
   m_Sprite: {fileID: 21300030, guid: 9603be6d9ac69924f945566fb9497bde, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -104,7 +104,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: bc3e8cd2199b5b64ba3148bf11f33110, type: 2}
   - {fileID: 11400000, guid: 0ec75085c5a2a414f81d441a2df24fd0, type: 2}
   itemDropChance: 0.5
-  interactDistance: 1.8
+  messageDisplay: {fileID: 0}
+  interactDistance: 1.7
 --- !u!61 &7258165388404273298
 BoxCollider2D:
   m_ObjectHideFlags: 0

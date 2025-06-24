@@ -11,6 +11,8 @@ public class GameTestManager : MonoBehaviour
 
     // 클리어횟수 저장
     public int clearCount = 0;
+    public bool isReturned = false;
+    public bool isFailed = false;
 
 
     private void Awake()

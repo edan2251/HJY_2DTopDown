@@ -55,6 +55,8 @@ public class DungeonManager : MonoBehaviour
 
     private int previousRoomID = -1;  // 초기값 -1
 
+    public PlayerMessageDisplay messageDisplay;
+
     private Coroutine fadeOutCoroutine;
 
     [System.Serializable]
@@ -359,6 +361,7 @@ public class DungeonManager : MonoBehaviour
             {
                 if (!shortestPath.Contains(newRoomID))
                 {
+                    messageDisplay.ShowMessage("맙소사.. 이쪽 길이 아니었어..");
                     Debug.Log("최단 경로가 아닌 방 입장 시도! 1번 방으로 강제 이동!");
                     newRoomID = 1;
 

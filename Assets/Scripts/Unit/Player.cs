@@ -19,6 +19,8 @@ public class Player : MonoBehaviour
         set => speed = value;
     }
 
+    [SerializeField] private FadeSceneChanger fadeSceneChanger;
+
     private PlayerController controller;
     private SpriteRenderer spriteRenderer;
 
@@ -35,7 +37,7 @@ public class Player : MonoBehaviour
     [SerializeField] private TextMeshProUGUI clearCountText; // UI에 클리어 횟수 표시
 
     private float pauseStartTime = -1f; // minimap 정지 시작 시각
-    private float pauseDelay = 3f;      // 대기 시간 (초)
+    private float pauseDelay = 5f;      // 대기 시간 (초)
 
     private void Awake()
     {
@@ -126,7 +128,7 @@ public class Player : MonoBehaviour
 
     private void UpdateClearCountUI()
     {
-        clearCountText.text = $"{GameTestManager.GetInstance().clearCount} / 3";
+        clearCountText.text = $"{GameTestManager.GetInstance().clearCount + 1} / 4 층";
     }
 
     IEnumerator BossTileStay()
@@ -135,13 +137,14 @@ public class Player : MonoBehaviour
 
         GameTestManager.GetInstance().clearCount++;
         Debug.Log($"보스 타일 도달! 현재 클리어 횟수: {GameTestManager.GetInstance().clearCount}/2");
-        SceneManager.LoadScene("Dungeon");
+        fadeSceneChanger.ChangeSceneWithFade("Dungeon");
 
         if (GameTestManager.GetInstance().clearCount >= 4)
         {
             Debug.Log("게임 클리어! Test_Main 씬으로 이동합니다.");
             GameTestManager.GetInstance().clearCount = 0;
-            SceneManager.LoadScene("Test_Main");
+            GameTestManager.GetInstance().isReturned = true;
+            fadeSceneChanger.ChangeSceneWithFade("Test_Main");
         }
 
         isOnBossTile = false;

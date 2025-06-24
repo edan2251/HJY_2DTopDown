@@ -15,6 +15,9 @@ public class ItemManager : MonoBehaviour
         public int reviveCount;
     }
 
+    public int GetSpeedBoostCount() => speedBoostCount;
+    public int GetReviveCount() => reviveCount;
+
     public ItemData speedBoostItemData;
     public ItemData reviveItemData;
 
@@ -40,6 +43,8 @@ public class ItemManager : MonoBehaviour
     private int reviveCount = 0;
 
     private bool isSpeedBoostActive = false;
+
+    public PlayerMessageDisplay messageDisplay;
 
     private void OnApplicationQuit()
     {
@@ -78,12 +83,22 @@ public class ItemManager : MonoBehaviour
         switch (itemData.itemType)
         {
             case ItemType.SpeedBoost:
+                if (speedBoostCount >= 9)
+                {
+                    return;
+                }
+
                 speedBoostItemData = itemData;
                 speedBoostCount++;
                 UpdateSpeedBoostUI();
                 break;
 
             case ItemType.Revive:
+                if (reviveCount >= 9)
+                {
+                    return;
+                }
+
                 reviveItemData = itemData;
                 reviveCount++;
                 UpdateReviveUI();
@@ -120,6 +135,8 @@ public class ItemManager : MonoBehaviour
 
     private void UseSpeedBoost()
     {
+        messageDisplay.ShowMessage("서둘러야겠어!");
+
         if (isSpeedBoostActive || speedBoostCount <= 0) return;
 
         speedBoostCount--;
@@ -143,6 +160,7 @@ public class ItemManager : MonoBehaviour
         isSpeedBoostActive = false;
 
         UpdateSpeedBoostUI();
+        messageDisplay.ShowMessage("벌써 지친거 같아. . .");
     }
 
     // 부활 아이템은 자동 발동이므로 별도 버튼 클릭 함수는 필요 없고,

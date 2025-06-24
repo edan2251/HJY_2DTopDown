@@ -1,6 +1,5 @@
 using DG.Tweening;
 using TMPro;
-using UnityEngine.SceneManagement;
 using UnityEngine;
 
 public class GameTimer : MonoBehaviour
@@ -10,6 +9,10 @@ public class GameTimer : MonoBehaviour
     private float timeLeft;
     private bool timerRunning = false;
     private bool isBlinking = false;
+
+    public PlayerMessageDisplay messageDisplay;
+
+    [SerializeField] private FadeSceneChanger sceneChangeManager;
 
     void Start()
     {
@@ -39,8 +42,9 @@ public class GameTimer : MonoBehaviour
 
     void UpdateTimerUI()
     {
+        int stage = GameTestManager.GetInstance().clearCount;
         int seconds = Mathf.CeilToInt(timeLeft % 60f);
-        timerText.text = $"{seconds:D2}";
+        timerText.text = $"{seconds:D2}\"";
 
         if (timeLeft <= 10f)
         {
@@ -69,7 +73,10 @@ public class GameTimer : MonoBehaviour
         }
 
         Debug.Log("시간 종료! 게임 오버");
-        SceneManager.LoadScene("Test_Main");
+        GameTestManager.GetInstance().isFailed = true;
+        GameTestManager.GetInstance().isReturned = true;
+        sceneChangeManager.ChangeSceneWithFade("Test_Main");
+
     }
 
     // 부활 시 호출: 시간 연장하고 다시 타이머 재가동
@@ -81,6 +88,7 @@ public class GameTimer : MonoBehaviour
         timerText.DOKill();
         timerText.color = Color.white;
 
+        messageDisplay.ShowMessage("휴. . 이게 있어서 다행이군. .");
         Debug.Log($"부활! 타이머 {extraTime}초 연장됨.");
     }
 }

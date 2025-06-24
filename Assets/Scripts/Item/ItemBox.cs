@@ -8,8 +8,10 @@ public class ItemBox : MonoBehaviour
     public List<ItemData> possibleItems;
     public float itemDropChance = 0.5f;  // 50% 확률 아이템 등장
 
+    public PlayerMessageDisplay messageDisplay;
+
     private Transform player;
-    public float interactDistance = 1.8f;
+    public float interactDistance = 2.3f;
 
     private bool isOpened = false;
 
@@ -20,6 +22,11 @@ public class ItemBox : MonoBehaviour
 
     private void Start()
     {
+        if (messageDisplay == null)
+        {
+            messageDisplay = FindObjectOfType<PlayerMessageDisplay>();
+        }
+
         if (spriteRenderer == null)
             spriteRenderer = GetComponent<SpriteRenderer>();
 
@@ -61,17 +68,25 @@ public class ItemBox : MonoBehaviour
 
         if (roll < 0.40f)
         {
-            // 40% 확률로 실패 (아이템 없음)
             Debug.Log("아이템 없음");
+            messageDisplay?.ShowMessage("이런, 벌써 누가 가져갔나...");
         }
         else if (roll < 0.75f)
         {
-            // 35% 확률로 속도 아이템 획득
+            // 속도 아이템
             ItemData speedItem = possibleItems.Find(item => item.itemType == ItemType.SpeedBoost);
             if (speedItem != null)
             {
-                ItemManager.Instance.ObtainItem(speedItem);
-                Debug.Log($"속도 아이템 획득: {speedItem.name}");
+                if (ItemManager.Instance.GetSpeedBoostCount() >= 9)
+                {
+                    messageDisplay?.ShowMessage("이건 너무 많이 들고 있어 . . .");
+                }
+                else
+                {
+                    ItemManager.Instance.ObtainItem(speedItem);
+                    Debug.Log($"속도 아이템 획득: {speedItem.name}");
+                    messageDisplay?.ShowMessage("더 빨리 달릴 수 있을 것 같아");
+                }
             }
             else
             {
@@ -80,12 +95,20 @@ public class ItemBox : MonoBehaviour
         }
         else
         {
-            // 25% 확률로 부활 아이템 획득
+            // 부활 아이템
             ItemData reviveItem = possibleItems.Find(item => item.itemType == ItemType.Revive);
             if (reviveItem != null)
             {
-                ItemManager.Instance.ObtainItem(reviveItem);
-                Debug.Log($"부활 아이템 획득: {reviveItem.name}");
+                if (ItemManager.Instance.GetReviveCount() >= 9)
+                {
+                    messageDisplay?.ShowMessage("이건 너무 많이 들고 있어 . . .");
+                }
+                else
+                {
+                    ItemManager.Instance.ObtainItem(reviveItem);
+                    Debug.Log($"부활 아이템 획득: {reviveItem.name}");
+                    messageDisplay?.ShowMessage("이걸로 조금 더 버틸 수 있겠군");
+                }
             }
             else
             {
@@ -93,9 +116,9 @@ public class ItemBox : MonoBehaviour
             }
         }
 
-        // 상자 열리는 애니메이션, 사운드 등 처리
         Destroy(gameObject);
     }
+
 
     public void SetVisibility(bool visible)
     {
