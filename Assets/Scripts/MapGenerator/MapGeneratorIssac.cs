@@ -30,6 +30,11 @@ public class MapGeneratorIssac : MonoBehaviour
     private static int totalSwitchCount = 0; // 전체 스위치 수 카운트
     private static HashSet<int> switchedRoomIDs = new HashSet<int>(); // 방마다 1개 제한
 
+    [SerializeField] private GameObject ItemBoxPrefab;
+    private List<GameObject> spawnedItemBoxes = new List<GameObject>(); // 배치된 아이템박스 목록
+    private static int totalItemBoxCount = 0; // 전체 아이템박스 수 카운트
+    private static HashSet<int> ItemBoxedRoomIDs = new HashSet<int>(); // 방마다 1개 제한
+
     bool DrawnBossCell = false;
     bool isBossCell = false;
     private float tileSizePerCell;
@@ -108,6 +113,9 @@ public class MapGeneratorIssac : MonoBehaviour
             PlaceSwitchesInMap();
         }
 
+        //아이템박스 스폰
+        PlaceItemBoxInMap();
+
         // 3층이면 최단거리 경로 생성
         if (GameTestManager.GetInstance().clearCount == 3)
         {
@@ -121,6 +129,8 @@ public class MapGeneratorIssac : MonoBehaviour
             DungeonManager.GetInstance().LoadVisitedRoomsFromJSON();  // 미니맵밝아지는거
         }
         DungeonManager.GetInstance().HighlightBossRoomOnMinimap(16);
+
+
     }
 
     void InitMap()
@@ -433,6 +443,54 @@ public class MapGeneratorIssac : MonoBehaviour
 
                 totalSwitchCount++;
                 switchedRoomIDs.Add(room.id);
+            }
+        }
+    }
+
+    void PlaceItemBoxInMap()
+    {
+        int maxItemBoxes = 8;
+        totalItemBoxCount = 0;
+        ItemBoxedRoomIDs.Clear();
+
+        // 기존 스위치 제거
+        foreach (var sw in spawnedItemBoxes)
+        {
+            if (sw != null)
+                Destroy(sw);
+        }
+        spawnedItemBoxes.Clear();
+
+        List<Cell> candidateRooms = new List<Cell>();
+
+        foreach (Cell cell in cellList)
+        {
+            if (cell.isChecked && !cell.isBossRoom && cell.id != 1 && cell.id != 16)
+            {
+                candidateRooms.Add(cell);
+            }
+        }
+
+        candidateRooms = ShuffleList(candidateRooms);
+
+        foreach (Cell room in candidateRooms)
+        {
+            if (totalItemBoxCount >= maxItemBoxes) break;
+
+            if (!ItemBoxedRoomIDs.Contains(room.id))
+            {
+                // 위치 계산
+                Vector3Int pos = new Vector3Int(room.tilemapLocalPos.x + tileNumPerCell / 2, room.tilemapLocalPos.y + tileNumPerCell / 2, 0);
+                Vector3 worldPos = groundTilemap.CellToWorld(pos) + new Vector3(0.5f, 0.5f, -1f);
+
+                // 스위치 생성 및 설정
+                GameObject sw = Instantiate(ItemBoxPrefab, worldPos, Quaternion.identity);
+                sw.GetComponent<ItemBox>().roomID = room.id;
+                sw.GetComponent<ItemBox>().SetVisibility(false); // 처음엔 숨겨둠
+                spawnedItemBoxes.Add(sw);
+
+                totalItemBoxCount++;
+                ItemBoxedRoomIDs.Add(room.id);
             }
         }
     }

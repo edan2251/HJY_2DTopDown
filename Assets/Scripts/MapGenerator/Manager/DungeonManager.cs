@@ -173,26 +173,36 @@ public class DungeonManager : MonoBehaviour
             saveData = new DungeonVisitData();
         }
 
+        int currentFloor = GameTestManager.GetInstance().clearCount;
+
         // 현재 층의 데이터가 이미 있는지 확인
-        FloorVisitData currentFloorData = saveData.floors.Find(f => f.floor == GameTestManager.GetInstance().clearCount);
+        FloorVisitData currentFloorData = saveData.floors.Find(f => f.floor == currentFloor);
 
         if (currentFloorData != null)
         {
-            // 중복 방지하고 추가
+            // 중복 방지하고 추가 (ID 16 제외)
             foreach (int id in isRoomVisited)
             {
-                if (!currentFloorData.visitedRoomIDs.Contains(id))
+                if (id != 16 && !currentFloorData.visitedRoomIDs.Contains(id))
                     currentFloorData.visitedRoomIDs.Add(id);
             }
         }
         else
         {
-            // 새 층 데이터 추가
+            // 새 층 데이터 추가 (ID 16 제외)
+            List<int> filteredRoomIDs = new List<int>();
+            foreach (int id in isRoomVisited)
+            {
+                if (id != 16)
+                    filteredRoomIDs.Add(id);
+            }
+
             currentFloorData = new FloorVisitData
             {
-                floor = GameTestManager.GetInstance().clearCount,
-                visitedRoomIDs = new List<int>(isRoomVisited)
+                floor = currentFloor,
+                visitedRoomIDs = filteredRoomIDs
             };
+
             saveData.floors.Add(currentFloorData);
         }
 
@@ -384,6 +394,7 @@ public class DungeonManager : MonoBehaviour
         }
 
         SetSwitchVisibility(playerRoomID);
+        SetItemBoxVisibility(playerRoomID);
         SaveVisitedRoomsToJSON();
     }
 
@@ -398,6 +409,21 @@ public class DungeonManager : MonoBehaviour
             else
             {
                 sw.SetVisibility(false);
+            }
+        }
+    }
+
+    public void SetItemBoxVisibility(int activeRoomID)
+    {
+        foreach (var box in FindObjectsOfType<ItemBox>())
+        {
+            if (box.roomID == activeRoomID)
+            {
+                box.SetVisibility(true);
+            }
+            else
+            {
+                box.SetVisibility(false);
             }
         }
     }
@@ -465,6 +491,11 @@ public class DungeonManager : MonoBehaviour
 
     public void ActivateMinimap(int id, bool isActivate)
     {
+        if (!sameRoomDic.ContainsKey(id))
+        {
+            Debug.LogWarning($"[Minimap] 존재하지 않는 Room ID {id} 접근 시도");
+            return; // 없으면 무시
+        }
         foreach (Cell cell in sameRoomDic[id])
         {
             SpriteRenderer minimapRenderer = cell.transform.Find("minimapSprite").GetComponent<SpriteRenderer>();
